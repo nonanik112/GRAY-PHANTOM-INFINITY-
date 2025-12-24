@@ -1,0 +1,131 @@
+<!-- dashboard/quantum_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Attack Dashboard - Black Phantom Infinity</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Courier New', monospace; 
+            background: #000; 
+            color: #0f0; 
+            margin: 0;
+            padding: 20px;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0f0;
+            padding-bottom: 20px;
+        }
+        .quantum-state { 
+            background: #001100; 
+            padding: 20px; 
+            margin: 10px; 
+            border-radius: 10px;
+            border: 1px solid #0f0;
+        }
+        .live-data {
+            background: #000011;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #00f;
+        }
+        #quantum-viz, #supremacy-chart {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌌 QUANTUM ATTACK DASHBOARD 🌌</h1>
+        <h2>Black Phantom Infinity v6.0</h2>
+        <div id="quantum-status">Quantum State: <span id="q-state">Superposition</span></div>
+    </div>
+
+    <div class="quantum-state">
+        <h3>🔮 Quantum Algorithm Performance</h3>
+        <div id="quantum-viz"></div>
+    </div>
+
+    <div class="quantum-state">
+        <h3>⚛️ Quantum Supremacy Tracking</h3>
+        <div id="supremacy-chart"></div>
+    </div>
+
+    <div class="live-data">
+        <h3>📊 Live Quantum Measurements</h3>
+        <div id="live-quantum"></div>
+    </div>
+
+    <script>
+        // Quantum state visualization
+        function updateQuantumViz() {
+            const quantumData = [{
+                x: ['Shor', 'Grover', 'QKD', 'QRNG'],
+                y: [85, 92, 78, 95],
+                type: 'bar',
+                marker: {
+                    color: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+                    colorscale: 'Portland'
+                }
+            }];
+
+            const layout = {
+                title: 'Quantum Algorithm Success Rates (%)',
+                xaxis: { title: 'Algorithm' },
+                yaxis: { title: 'Success Rate' },
+                plot_bgcolor: '#000000',
+                paper_bgcolor: '#000000',
+                font: { color: '#0f0' }
+            };
+
+            Plotly.newPlot('quantum-viz', quantumData, layout);
+        }
+
+        // Quantum supremacy tracking
+        function updateSupremacyChart() {
+            const supremacyData = [{
+                x: [1, 2, 3, 4, 5],
+                y: [10, 50, 200, 1000, 5000],
+                mode: 'lines+markers',
+                line: { color: '#ff00ff', width: 3 },
+                marker: { size: 10, color: '#ff00ff' }
+            }];
+
+            const layout = {
+                title: 'Quantum Advantage Over Time',
+                xaxis: { title: 'Attack Iteration' },
+                yaxis: { title: 'Quantum Speedup Factor' },
+                plot_bgcolor: '#000000',
+                paper_bgcolor: '#000000',
+                font: { color: '#0f0' }
+            };
+
+            Plotly.newPlot('supremacy-chart', supremacyData, layout);
+        }
+
+        // Live quantum measurements
+        function updateLiveQuantum() {
+            const liveDiv = document.getElementById('live-quantum');
+            const measurements = [
+                `Superposition State: ${Math.random() > 0.5 ? '|0⟩' : '|1⟩'}`,
+                `Entanglement Correlation: ${(Math.random() * 100).toFixed(2)}%`,
+                `Quantum Volume: ${Math.floor(Math.random() * 2048)}`,
+                `Decoherence Time: ${(Math.random() * 100).toFixed(3)}μs`
+            ];
+            
+            liveDiv.innerHTML = measurements.map(m => `<div>${m}</div>`).join('');
+        }
+
+        // Update functions
+        setInterval(updateLiveQuantum, 1000);
+        updateQuantumViz();
+        updateSupremacyChart();
+    </script>
+</body>
+</html>

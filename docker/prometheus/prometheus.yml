@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'black-phantom-infinity'
+    static_configs:
+      - targets: ['black-phantom-infinity:3000']

@@ -1,0 +1,289 @@
+# Hardware Security Attack Configuration
+# Advanced hardware exploitation and side-channel attack settings
+
+hardware:
+  # JTAG/Boundary Scan Configuration
+  jtag:
+    enabled: true
+    frequency: 1000000  # 1 MHz
+    voltage: 3.3
+    interface: "USB"
+    
+    # JTAG-specific settings
+    instruction_register_length: 8
+    data_register_length: 32
+    tap_states: ["test_logic_reset", "run_test_idle", "select_dr_scan"]
+    
+    # Advanced JTAG features
+    advanced:
+      idcode_scanning: true
+      boundary_scan: true
+      memory_access: true
+      processor_debug: true
+      flash_programming: true
+
+  # Side-channel attack configuration
+  side_channel:
+    enabled: true
+    
+    # Power analysis
+    power_analysis:
+      enabled: true
+      sample_rate: 100000000  # 100 MHz
+      resolution: 12  # bits
+      channels: 4
+      triggering: "digital"
+      
+    # Electromagnetic analysis
+    electromagnetic:
+      enabled: true
+      frequency_range: [1, 6000]  # MHz
+      antenna_type: "loop"
+      amplification: 40  # dB
+      filtering: "bandpass"
+      
+    # Timing analysis
+    timing:
+      enabled: true
+      resolution: 1  # nanosecond
+      statistical_analysis: true
+      machine_learning: true
+      
+    # Acoustic analysis
+    acoustic:
+      enabled: true
+      frequency_range: [20, 20000]  # Hz
+      sensitivity: -40  # dB
+      directional: true
+      noise_cancellation: true
+
+  # RFID/NFC Configuration
+  rfid_nfc:
+    enabled: true
+    
+    # Frequency settings
+    frequencies:
+      low_freq: 125000  # 125 kHz
+      high_freq: 13560000  # 13.56 MHz
+      ultra_high_freq: 860000000  # 860 MHz
+      
+    # Protocol support
+    protocols:
+      - "ISO14443-A"
+      - "ISO14443-B"
+      - "ISO15693"
+      - "FeliCa"
+      - "MIFARE Classic"
+      - "MIFARE DESFire"
+      - "EM4100"
+      - "HID Prox"
+      
+    # Attack capabilities
+    attacks:
+      card_emulation: true
+      reader_emulation: true
+      relay_attack: true
+      signal_amplification: true
+      cryptographic_attacks: true
+
+  # USB Attack Configuration
+  usb:
+    enabled: true
+    
+    # USB device types
+    device_types:
+      - "keyboard"
+      - "mouse"
+      - "mass_storage"
+      - "network_adapter"
+      - "hid_device"
+      - "serial_device"
+      
+    # Attack payloads
+    payloads:
+      keyboard_injection: true
+      mouse_jiggler: true
+      mass_storage_exploit: true
+      network_tethering: true
+      credential_harvesting: true
+      payload_delivery: true
+      
+    # Advanced USB features
+    advanced:
+      badusb_emulation: true
+      usb_killer: false  # Disabled for safety
+      voltage_attack: false  # Disabled for safety
+      data_exfiltration: true
+
+  # JTAG Exploitation Settings
+  jtag_exploitation:
+    enabled: true
+    
+    # Device discovery
+    auto_discovery: true
+    idcode_database: "hardware/jtag_ids.yml"
+    chain_scanning: true
+    
+    # Memory operations
+    memory_operations:
+      read: true
+      write: true
+      erase: true
+      verify: true
+      
+    # Flash operations
+    flash_operations:
+      read: true
+      write: true
+      erase: true
+      verify: true
+      protect: true
+      unprotect: true
+
+  # Side-channel Attack Settings
+  side_channel_attacks:
+    enabled: true
+    
+    # Power analysis attacks
+    power_analysis:
+      simple_power_analysis: true
+      differential_power_analysis: true
+      correlation_power_analysis: true
+      template_attacks: true
+      machine_learning: true
+      
+    # Electromagnetic attacks
+    electromagnetic:
+      near_field: true
+      far_field: true
+      signal_processing: true
+      pattern_recognition: true
+      
+    # Timing attacks
+    timing_attacks:
+      cache_timing: true
+      branch_prediction: true
+      instruction_timing: true
+      cryptographic_timing: true
+      
+    # Acoustic attacks
+    acoustic:
+      keyboard_acoustic: true
+      printer_acoustic: true
+      cpu_acoustic: true
+      mechanical_acoustic: true
+
+  # RFID/NFC Attack Settings
+  rfid_nfc_attacks:
+    enabled: true
+    
+    # Card attacks
+    card_attacks:
+      cloning: true
+      emulation: true
+      data_extraction: true
+      key_recovery: true
+      privilege_escalation: true
+      
+    # Reader attacks
+    reader_attacks:
+      emulation: true
+      relay_attack: true
+      signal_amplification: true
+      man_in_the_middle: true
+      
+    # Protocol attacks
+    protocol_attacks:
+      anticollision_bypass: true
+      authentication_bypass: true
+      encryption_bypass: true
+      replay_attack: true
+
+  # Hardware Trojan Configuration
+  hardware_trojans:
+    enabled: true
+    
+    # Trojan types
+    trojan_types:
+      - "combinational"
+      - "sequential"
+      - "analog"
+      - "digital"
+      - "hybrid"
+      
+    # Insertion methods
+    insertion_methods:
+      - "manufacturing"
+      - "design_stage"
+      - "synthesis"
+      - "placement_routing"
+      - "testing"
+      
+    # Activation methods
+    activation_methods:
+      - "counter_based"
+      - "sensor_based"
+      - "communication_based"
+      - "time_based"
+      - "authentication_based"
+
+  # Performance Settings
+  performance:
+    # Sampling rates
+    sampling:
+      max_rate: 1000000000  # 1 GHz
+      resolution: 16  # bits
+      memory_depth: 1000000000  # 1 GB
+      
+    # Processing power
+    processing:
+      parallel_processing: true
+      gpu_acceleration: true
+      distributed_computing: true
+      cloud_integration: true
+      
+    # Memory management
+    memory:
+      max_usage: "8GB"
+      cache_size: "2GB"
+      swap_usage: true
+
+  # Safety Settings
+  safety:
+    # Voltage limits
+    voltage:
+      max_input: 5.0  # Volts
+      max_output: 3.3  # Volts
+      current_limit: 0.5  # Amperes
+      
+    # Frequency limits
+    frequency:
+      max_jtag: 50000000  # 50 MHz
+      max_rfid: 1000000000  # 1 GHz
+      max_usb: 480000000  # 480 MHz
+      
+    # Power limits
+    power:
+      max_consumption: 10  # Watts
+      thermal_limit: 85  # Celsius
+      cooling_required: true
+
+  # Legal and Ethical Settings
+  legal:
+    # Authorized testing only
+    authorized_testing: true
+    permission_required: true
+    target_consent: true
+    
+    # Attack limitations
+    attack_limits:
+      no_permanent_damage: true
+      no_financial_harm: true
+      no_privacy_violation: true
+      data_retention_limit: 30  # days
+      
+    # Compliance
+    compliance:
+      gdpr_compliant: true
+      ethical_guidelines: true
+      responsible_disclosure: true

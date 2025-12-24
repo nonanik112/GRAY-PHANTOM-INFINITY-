@@ -1,0 +1,181 @@
+version: '3.8'
+
+services:
+  # Main application
+  black-phantom-infinity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: black-phantom-infinity
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Web dashboard
+      - "8080:8080"  # REST API
+      - "8081:8081"  # WebSocket
+    volumes:
+      - ./logs:/app/logs
+      - ./outputs:/app/outputs
+      - ./data:/app/data
+      - ./config:/app/config:ro
+    environment:
+      - BLACK_PHANTOM_ENV=production
+      - BLACK_PHANTOM_CONFIG=/app/config/infinity_config.yml
+      - DATABASE_URL=sqlite:///app/data/black_phantom_infinity.db
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - black-phantom-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: black-phantom-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - black-phantom-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # PostgreSQL for data storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: black-phantom-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      - POSTGRES_DB=black_phantom_infinity
+      - POSTGRES_USER=black_phantom
+      - POSTGRES_PASSWORD=changeme_in_production
+    networks:
+      - black-phantom-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U black_phantom"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: black-phantom-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - black-phantom-infinity
+    networks:
+      - black-phantom-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: black-phantom-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - black-phantom-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: black-phantom-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - black-phantom-network
+
+  # Tor proxy for anonymity
+  tor:
+    image: dperson/torproxy:latest
+    container_name: black-phantom-tor
+    restart: unless-stopped
+    ports:
+      - "9050:9050"  # SOCKS proxy
+      - "9051:9051"  # Control port
+    environment:
+      - PASSWORD=changeme
+    networks:
+      - black-phantom-network
+
+  # VPN client (optional)
+  vpn:
+    image: kylemanna/openvpn:latest
+    container_name: black-phantom-vpn
+    restart: unless-stopped
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./docker/vpn/config:/etc/openvpn:ro
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - black-phantom-network
+    profiles:
+      - vpn
+
+networks:
+  black-phantom-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
