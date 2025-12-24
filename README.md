@@ -1,5 +1,5 @@
 # GRAY-PHANTOM-INFINITY-
-🕷️ BLACK PHANTOM INFINITY v6.0
+🕷️ GRAY-PHANTOM-INFINITY v6.0
 🌌 Infinity-Level Ultra-Advanced Attack Framework
 
     "The most comprehensive cyber warfare platform ever created"
