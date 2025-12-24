@@ -10,7 +10,7 @@
 ![Future](https://img.shields.io/badge/Future-Proof-orange)
 
 🎯 Overview
-BLACK PHANTOM INFINITY v6.0 is the world's most advanced, comprehensive penetration testing and red team framework. It encompasses ALL known and emerging attack vectors, from traditional network exploitation to quantum computing attacks, AI/ML security testing, hardware hacking, blockchain exploitation, automotive security, satellite systems, and beyond.
+GRAY-PHANTOM-INFINITY v6.0 is the world's most advanced, comprehensive penetration testing and red team framework. It encompasses ALL known and emerging attack vectors, from traditional network exploitation to quantum computing attacks, AI/ML security testing, hardware hacking, blockchain exploitation, automotive security, satellite systems, and beyond.
 🌟 Key Features
 
     ∞/10 Completeness: Every attack vector included
