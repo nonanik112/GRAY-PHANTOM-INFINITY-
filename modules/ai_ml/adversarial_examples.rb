@@ -1,3 +1,6 @@
+require 'torch'
+require ' torchvision'
+
 module AdversarialExamples
   def adversarial_examples_attacks
     log "[AI/ML] Adversarial examples attacks"

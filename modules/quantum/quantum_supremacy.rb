@@ -1,99 +1,40 @@
 module QuantumSupremacy
   def quantum_supremacy_attacks
-    log "[QUANTUM] Executing quantum supremacy attacks"
+    log "[QUANTUM-SUPREMACY] GERÇEK Quantum supremacy attacks"
     
-    quantum_algorithms = [
-      { name: 'Shor Algorithm', method: :shor_algorithm_attack },
-      { name: 'Grover Algorithm', method: :grover_algorithm_attack },
-      { name: 'Quantum Fourier Transform', method: :quantum_fourier_attack },
-      { name: 'Quantum Phase Estimation', method: :quantum_phase_estimation_attack },
-      { name: 'Variational Quantum Eigensolver', method: :vqe_attack },
-      { name: 'Quantum Approximate Optimization', method: :qaoa_attack }
-    ]
-    
-    quantum_algorithms.each do |algorithm|
-      log "[QUANTUM] Testing #{algorithm[:name]}"
-      
-      result = send(algorithm[:method])
-      
-      if result[:success]
-        log "[QUANTUM] Quantum attack successful: #{algorithm[:name]}"
-        
-        @exploits << {
-          type: 'Quantum Supremacy Attack',
-          algorithm: algorithm[:name],
-          severity: 'CRITICAL',
-          data_extracted: result[:data],
-          technique: 'Quantum algorithm exploitation'
-        }
-      end
+    if quantum_license_valid?
+      execute_real_supremacy_attacks
+    else
+      log "[QUANTUM-SUPREMACY] Demo modu - sınırlı supremacy"
+      demo_supremacy_attacks
     end
   end
+
+
 
   def shor_algorithm_attack
-    log "[QUANTUM] Shor's algorithm attack - factoring large integers"
+    log "[QUANTUM-SUPREMACY] GERÇEK Shor algorithm attack"
     
-    # Simulate quantum factoring of RSA keys
-    target_numbers = [
-      323,    # 17 * 19
-      1189,   # 29 * 41  
-      177241, # 401 * 443
-      4181    # Fibonacci number
-    ]
-    
-    target_numbers.each do |number|
-      factors = quantum_shor_factorization(number)
-      
-      if factors && factors.length > 1
-        log "[QUANTUM] Successfully factored #{number} = #{factors.join(' × ')}"
-        
-        return {
-          success: true,
-          data: {
-            original_number: number,
-            factors: factors,
-            algorithm: 'Shor',
-            threat_level: 'BREAKS_RSA_ENCRYPTION'
-          },
-          technique: 'Quantum factoring using Shor algorithm'
-        }
-      end
+    if quantum_license_valid?
+      # Gerçek RSA kırma
+      real_shor_rsa_attack
+    else
+      # Demo RSA kırma
+      demo_shor_attack
     end
-    
-    { success: false }
   end
 
+
   def grover_algorithm_attack
-    log "[QUANTUM] Grover's algorithm attack - quantum search"
+    log "[QUANTUM-SUPREMACY] GERÇEK Grover algorithm attack"
     
-    # Simulate quantum search attack on hash functions
-    target_hashes = [
-      '5d41402abc4b2a76b9719d911017c592',
-      '7d793037a0760186574b0282f2f435e7',
-      '098f6bcd4621d373cade4e832627b4f6'
-    ]
-    
-    target_hashes.each do |target_hash|
-      result = quantum_grover_search(target_hash)
-      
-      if result[:found]
-        log "[QUANTUM] Grover search found preimage for hash: #{target_hash}"
-        
-        return {
-          success: true,
-          data: {
-            target_hash: target_hash,
-            preimage: result[:preimage],
-            iterations: result[:iterations],
-            speedup: 'quadratic',
-            threat_level: 'BREAKS_HASH_FUNCTIONS'
-          },
-          technique: 'Quantum search using Grover algorithm'
-        }
-      end
+    if quantum_license_valid?
+      # Gerçek hash kırma
+      real_grover_hash_attack
+    else
+      # Demo hash kırma
+      demo_grover_attack
     end
-    
-    { success: false }
   end
 
   def quantum_fourier_attack
@@ -226,6 +167,66 @@ module QuantumSupremacy
 
   private
 
+
+  def execute_real_supremacy_attacks
+    attacks = [
+      { name: 'IBM Quantum Volume', method: :real_quantum_volume },
+      { name: 'Quantum Error Rate', method: :real_quantum_error_test },
+      { name: 'Quantum Advantage', method: :real_quantum_advantage_test }
+    ]
+    
+    results = []
+    
+    attacks.each do |attack|
+      log "[QUANTUM-SUPREMACY] #{attack[:name]} çalıştırılıyor"
+      
+      result = send(attack[:method])
+      results << result if result[:success]
+      
+      @exploits << {
+        type: 'QUANTUM_SUPREMACY',
+        algorithm: attack[:name],
+        supremacy_achieved: result[:supremacy],
+        backend: result[:backend],
+        severity: 'CRITICAL'
+      }
+    end
+    
+    {
+      total_attacks: attacks.length,
+      successful: results.length,
+      supremacy_achieved: results.any? { |r| r[:supremacy] },
+      results: results
+    }
+  end
+
+   def real_shor_rsa_attack
+    # Gerçek RSA kırma
+    rsa_keys = discover_real_rsa_keys
+    
+    rsa_keys.each do |key|
+      log "[QUANTUM-SUPREMACY] GERÇEK RSA #{key[:bits]}-bit kırılıyor"
+      
+      quantum = RealQuantumHardware.new
+      result = quantum.execute_real_shor_algorithm(key[:modulus])
+      
+      if result[:success]
+        log "[QUANTUM-SUPREMACY] BAŞARILI! RSA kırıldı: #{key[:modulus]}"
+        
+        return {
+          success: true,
+          algorithm: 'Shor',
+          backend: result[:backend],
+          qubits: result[:qubits],
+          factors: result[:factors],
+          supremacy: true
+        }
+      end
+    end
+    
+    { success: false, error: 'RSA kırılamadı' }
+  end
+
   def quantum_shor_factorization(n)
     # Simulate quantum factoring (would use real quantum computer)
     return nil if n < 2
@@ -256,6 +257,33 @@ module QuantumSupremacy
     else
       { found: false }
     end
+  end
+
+
+   def real_grover_hash_attack
+    # Gerçek hash kırma
+    hashes = discover_real_hashes
+    
+    hashes.each do |hash|
+      log "[QUANTUM-SUPREMACY] GERÇEK Hash kırılıyor: #{hash[:hash]}"
+      
+      qiskit = QiskitBridge.new
+      result = qiskit.run_grover_on_hash(hash[:hash])
+      
+      if result[:success]
+        log "[QUANTUM-SUPREMACY] BAŞARILI! Hash kırıldı"
+        
+        return {
+          success: true,
+          algorithm: 'Grover',
+          source: result[:source],
+          preimage: result[:preimage],
+          supremacy: true
+        }
+      end
+    end
+    
+    { success: false, error: 'Hash kırılamadı' }
   end
 
   def quantum_fourier_period_finding(sequence)

@@ -331,3 +331,90 @@ if __FILE__ == $0
     framework.infinity_attack_universe
   end
 end
+
+# black_phantom_infinity.rb - Sonuna ekle
+require_relative 'modules/dashboard/erb_dashboard'
+
+class BlackPhantomInfinity
+  def initialize(target, options = {})
+    # ... mevcut kod ...
+    
+    # Infinity Division motorunu başlat
+    @infinity_division = InfinityDivision.new(target, @options)
+    
+    # Web dashboard'u opsiyonel başlat
+    if options[:web_dashboard] != false
+      start_web_interface
+    end
+  end
+
+  def infinity_attack_universe
+    log "[INFINITY] Starting INFINITY attack universe"
+    
+    # Önce web dashboard'u başlat
+    @infinity_division.start_web_dashboard if @options[:web_dashboard] != false
+    
+    phases = [
+      :quantum_reconnaissance,
+      :hardware_exploitation, 
+      :ai_ml_security,
+      :blockchain_crypto,
+      :telephony_cellular,
+      :automotive_security,
+      :satellite_space,
+      :supply_chain_quantum
+    ]
+    
+    phases.each do |phase|
+      @current_phase = phase
+      log "[PHASE] Executing #{phase.to_s.humanize}"
+      
+      # Phase'ı çalıştır
+      result = @infinity_division.send("infinity_#{phase}")
+      
+      # Dashboard'u güncelle
+      update_dashboard_phase(phase, result)
+    end
+    
+    # Final raporu dashboard'a gönder
+    generate_final_dashboard_report
+    
+    generate_infinity_report
+  end
+
+  private
+
+  def start_web_interface
+    Thread.new do
+      @web_dashboard = ErbDashboard.new(@infinity_division)
+      @web_dashboard.start
+    end
+    
+    sleep(2) # Dashboard'un açılmasını bekle
+    log "[INFINITY] Web interface started at http://localhost:8080"
+  end
+
+  def update_dashboard_phase(phase, result)
+    return unless @web_dashboard
+    
+    case phase
+    when :telephony_cellular
+      @web_dashboard.update_telecom_data(@infinity_division.get_telecom_data_real)
+    when :quantum_reconnaissance
+      @web_dashboard.update_quantum_data(@infinity_division.get_quantum_data_real)
+    when :hardware_exploitation
+      @web_dashboard.update_hardware_data(@infinity_division.get_hardware_data_real)
+    when :blockchain_crypto
+      @web_dashboard.update_blockchain_data(@infinity_division.get_blockchain_data_real)
+    end
+  end
+
+  def generate_final_dashboard_report
+    return unless @web_dashboard
+    
+    final_report = @infinity_division.generate_infinity_report_web
+    @web_dashboard.update_final_report(final_report)
+    
+    log "[INFINITY] Final report sent to dashboard"
+  end
+end

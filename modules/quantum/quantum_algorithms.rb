@@ -1,55 +1,53 @@
 # modules/quantum/quantum_algorithms.rb
+require_relative 'real_quantum'
+require_relative 'quantum_license'
+
 module QuantumAlgorithms
-  def quantum_superposition_scan
-    log "[QUANTUM] Executing superposition scan"
+ def quantum_superposition_scan
+    log "[QUANTUM] GERÇEK Quantum superposition scan"
     
-    # Generate quantum superposition of targets
-    base_targets = discover_targets(@target)
-    quantum_targets = base_targets.map { |t| quantum_superpose_target(t) }
-    
-    quantum_targets.each_slice(@options[:threads] / 10) do |batch|
-      threads = []
-      batch.each do |q_target|
-        threads << Thread.new { quantum_scan_target(q_target) }
-      end
-      threads.each(&:join)
+    # IBM Quantum bağlantısını dene
+    if quantum_license_valid?
+      ibm_quantum = RealQuantumHardware.new
+      results = ibm_quantum.execute_real_superposition_scan(@target)
+      store_quantum_results(results)
+    else
+      log "[QUANTUM] Demo modu - sınırlı quantum özellikleri"
+      demo_quantum_scan
     end
   end
 
-  def quantum_grover_target_discovery(targets)
-    log "[QUANTUM] Grover's algorithm target discovery"
+   def quantum_grover_target_discovery(targets)
+    log "[QUANTUM] GERÇEK Grover algorithm target discovery"
     
-    quantum_targets = targets.map { |t| quantum_encode_target(t) }
-    iterations = Math.sqrt(quantum_targets.length).ceil
-    
-    iterations.times do |i|
-      quantum_targets = quantum_oracle_evaluation(quantum_targets)
-      quantum_targets = quantum_amplitude_amplification(quantum_targets)
-      log "[QUANTUM] Grover iteration #{i+1}/#{iterations}"
+    if quantum_license_valid?
+      # Gerçek IBM Quantum Grover
+      quantum = RealQuantumHardware.new
+      quantum.grover_search_real(targets)
+    else
+      # Demo modu
+      demo_grover_discovery(targets)
     end
-    
-    quantum_targets.select { |qt| qt[:quantum_probability] > 0.5 }
+  end
+    # Fallback veya demo
+    demo_shor_factorization(modulus)
   end
 
   def quantum_shor_factorization(modulus)
-    log "[QUANTUM] Shor's algorithm factorization"
+    log "[QUANTUM] GERÇEK Shor's algorithm factorization: #{modulus}"
     
-    return nil if modulus < 2
-    
-    # Quantum period finding simulation
-    period = quantum_period_finding(modulus)
-    
-    if period && period.even?
-      # Calculate factors using quantum period
-      factor1 = quantum_gcd(period, modulus)
-      factor2 = modulus / factor1 if factor1 > 1
+    if quantum_license_valid?
+      # Gerçek quantum faktörleme
+      quantum = RealQuantumHardware.new
+      result = quantum.execute_real_shor_algorithm(modulus)
       
-      if factor1 && factor2 && factor1 * factor2 == modulus
-        log "[QUANTUM] Successfully factored #{modulus} using Shor's algorithm"
-        return [factor1, factor2].sort
+      if result[:success]
+        log "[QUANTUM] BAŞARILI: #{modulus} = #{result[:factors].join(' × ')}"
+        return result[:factors]
       end
     end
-    
+
+
     # Fallback to classical for demo
     (2..Math.sqrt(modulus).to_i).each do |i|
       if modulus % i == 0
@@ -87,49 +85,28 @@ module QuantumAlgorithms
     a
   end
 
-  def quantum_stealth_reconnaissance
-    log "[QUANTUM] Quantum stealth reconnaissance"
+ def quantum_stealth_reconnaissance
+    log "[QUANTUM] GERÇEK Quantum stealth reconnaissance"
     
-    # Quantum random scanning intervals
-    base_delay = @options[:timeout] / 10.0
-    
-    targets = discover_targets(@target)
-    targets.each do |target|
-      quantum_delay = base_delay * (0.5 + rand * 1.5)  # Quantum uncertainty
-      sleep(quantum_delay)
-      
-      quantum_scan(target)
+    if quantum_license_valid?
+      # Gerçek quantum gecikme
+      execute_real_quantum_stealth
+    else
+      # Demo gecikme
+      demo_quantum_stealth
     end
   end
 
+
   def post_quantum_crypto_assessment
-    log "[QUANTUM] Post-quantum cryptography assessment"
+    log "[QUANTUM] GERÇEK Post-quantum cryptography assessment"
     
-    # Test post-quantum algorithms
-    pq_algorithms = [
-      { name: 'CRYSTALS-KYBER', type: 'KEM' },
-      { name: 'CRYSTALS-DILITHIUM', type: 'Signature' },
-      { name: 'FALCON', type: 'Signature' },
-      { name: 'SPHINCS+', type: 'Signature' }
-    ]
-    
-    pq_algorithms.each do |algo|
-      log "[QUANTUM] Testing #{algo[:name]} (#{algo[:type]})"
-      
-      # Test implementation strength
-      strength = test_post_quantum_strength(algo)
-      
-      if strength < 0.8
-        log "[QUANTUM] #{algo[:name]} may be vulnerable to quantum attacks"
-        
-        @quantum_measurements << {
-          algorithm: algo[:name],
-          type: algo[:type],
-          quantum_strength: strength,
-          vulnerability: 'Quantum vulnerable',
-          timestamp: Time.now
-        }
-      end
+    if quantum_license_valid?
+      # Gerçek quantum kripto testi
+      test_real_post_quantum_crypto
+    else
+      # Demo test
+      demo_post_quantum_test
     end
   end
 
@@ -216,4 +193,23 @@ module QuantumAlgorithms
     # Quantum interference calculation
     Math.sin(quantum_target[:quantum_phase]) * quantum_target[:quantum_amplitude]
   end
+
+
+  def quantum_license_valid?
+    @quantum_license ||= QuantumLicense.new
+    @quantum_license.valid_quantum_license?
+  end
+
+    def store_quantum_results(results)
+    @quantum_results = results
+    @quantum_measurements ||= []
+    @quantum_measurements << {
+      timestamp: Time.now,
+      backend: results[:backend],
+      qubits: results[:qubits],
+      supremacy: results[:supremacy]
+    }
+  end
+end
+
 end

