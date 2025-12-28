@@ -517,6 +517,44 @@ class LicenseManager
   end
 end
 
+# gray_phantom_web.rb - Hardware yönlendirmeleri ekle
+def setup_hardware_routes
+  @server.mount_proc '/hardware' do |req, res|
+    init_infinity_motor  # Hardware master'ı başlat
+    res.body = render_hardware_dashboard
+  end
+
+  @server.mount_proc '/api/hardware/execute' do |req, res|
+    res['Content-Type'] = 'application/json'
+    
+    data = JSON.parse(req.body)
+    module_type = data['module']  # 'all', 'gps', 'jtag', 'rfid', 'side_channel', 'usb'
+    target = data['target']
+    
+    result = execute_hardware_module(module_type, target)
+    res.body = result.to_json
+  end
+end
+
+def execute_hardware_module(type, target)
+  case type
+  when 'all'
+    @hardware_master.execute_all_hardware_modules(target)
+  when 'gps'
+    @hardware_master.execute_real_gps_spoof(target)
+  when 'jtag'
+    @hardware_master.execute_real_jtag_exploit(target)
+  when 'rfid'
+    @hardware_master.execute_real_rfid_nfc(target)
+  when 'side_channel'
+    @hardware_master.execute_real_side_channel(target)
+  when 'usb'
+    @hardware_master.execute_real_usb_attacks(target)
+  else
+    { error: 'Bilinmeyen hardware modülü' }
+  end
+end
+
 # Yardımcılar
 def generate_hlr
   "+#{rand(1..99)}#{rand(100000000..999999999)}"

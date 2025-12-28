@@ -40,6 +40,9 @@ gem 'sequel', '~> 5.68'
 gem 'minitest', '~> 5.18'
 gem 'rake', '~> 13.0'
 
+# Hardware tools
+gem 'ffi'
+
 # Development tools
 gem 'pry', '~> 0.14'
 gem 'pry-byebug', '~> 3.10'
